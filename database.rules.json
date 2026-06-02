@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        "profile": {
+          // Only the owner can read or write their own profile.
+          ".read": "auth != null && auth.uid == $uid",
+          ".write": "auth != null && auth.uid == $uid"
+        },
+
+        "notifications": {
+          // Owner can always read/write. Accepted viewers can also read and delete.
+          ".read":  "auth != null && (auth.uid == $uid || root.child('users/' + $uid + '/incoming_requests/' + auth.uid + '/status').val() == 'accepted')",
+          ".write": "auth != null && (auth.uid == $uid || root.child('users/' + $uid + '/incoming_requests/' + auth.uid + '/status').val() == 'accepted')",
+          ".indexOn": ["receivedAt"]
+        },
+
+        "incoming_requests": {
+          // Owner can list all requests; individual entries are readable by owner or requester.
+          ".read": "auth != null && auth.uid == $uid",
+
+          "$requester_uid": {
+            // Owner sees all requests; requester can check the status of their own entry.
+            ".read": "auth != null && (auth.uid == $uid || auth.uid == $requester_uid)",
+
+            // Owner can write any status. Requester can only create/update with
+            // status 'pending' or 'rejected' — never self-grant 'accepted'.
+            ".write": "auth != null && (auth.uid == $uid || auth.uid == $requester_uid)",
+            ".validate": "auth.uid == $uid || newData.child('status').val() === 'pending' || newData.child('status').val() === 'rejected'"
+          }
+        }
+      }
+    },
+
+    "user_lookup": {
+      // Any signed-in user can search by email.
+      ".read": "auth != null",
+      "$email_key": {
+        // Users may only register their own uid under their own email key.
+        ".write": "auth != null",
+        ".validate": "newData.isString() && newData.val() === auth.uid"
+      }
+    }
+  }
+}

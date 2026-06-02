@@ -1,0 +1,103 @@
+# =============================================================================
+# CREDENCIALES Y SECRETOS — nunca deben ir al repositorio
+# =============================================================================
+
+# Firebase: generados por "flutterfire configure", cada dev crea los suyos
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+
+# Android signing
+android/key.properties
+*.jks
+*.keystore
+
+# iOS/macOS signing
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+*.provisionprofile
+
+# Variables de entorno
+.env
+.env.*
+*.env
+
+# Claude Code — configuración local del entorno de desarrollo
+.claude/
+
+# =============================================================================
+# FLUTTER / DART
+# =============================================================================
+
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication
+app.*.symbols
+
+# Obfuscation maps
+app.*.map.json
+
+# =============================================================================
+# ANDROID
+# =============================================================================
+
+# Propiedades locales con rutas absolutas del SDK/Flutter del desarrollador
+android/local.properties
+
+# Artefactos de build de Android Studio
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# =============================================================================
+# iOS / macOS
+# =============================================================================
+
+# CocoaPods — se regeneran con "pod install"
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# =============================================================================
+# IDEs Y EDITORES
+# =============================================================================
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (descomenta si NO quieres incluir la config del editor)
+# .vscode/
+
+# =============================================================================
+# SISTEMA OPERATIVO
+# =============================================================================
+
+.DS_Store
+Thumbs.db
+*.class
+*.log
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
