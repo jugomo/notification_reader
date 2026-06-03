@@ -54,7 +54,7 @@
             android:name=".NotificationActionReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.example.notification_reader.READ_NOTIFICATIONS" />
+                <action android:name="com.jugomo.notification_reader.READ_NOTIFICATIONS" />
             </intent-filter>
         </receiver>
 

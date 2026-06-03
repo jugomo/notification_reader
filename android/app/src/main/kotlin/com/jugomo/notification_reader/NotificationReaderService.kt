@@ -1,4 +1,4 @@
-package com.example.notification_reader
+package com.jugomo.notification_reader
 
 import android.app.NotificationManager
 import android.content.ComponentName

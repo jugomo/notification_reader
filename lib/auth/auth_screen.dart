@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
+import '../shared/app_version.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -20,6 +21,15 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    getAppVersion().then((v) {
+      if (mounted) setState(() => _appVersion = v);
+    });
+  }
 
   @override
   void dispose() {
@@ -69,6 +79,16 @@ class _AuthScreenState extends State<AuthScreen> {
 
     return Scaffold(
       backgroundColor: colors.surface,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            '©jugomo - $_appVersion',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: colors.outline),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../l10n/app_strings.dart';
 import '../l10n/locale_provider.dart';
@@ -137,7 +138,22 @@ class _SettingsTab extends StatelessWidget {
   }
 }
 
-class _AboutTab extends StatelessWidget {
+class _AboutTab extends StatefulWidget {
+  @override
+  State<_AboutTab> createState() => _AboutTabState();
+}
+
+class _AboutTabState extends State<_AboutTab> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _version = info.version);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
@@ -164,7 +180,7 @@ class _AboutTab extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${s.version} 1.0.0',
+            _version.isEmpty ? '' : '${s.version} $_version',
             style: textTheme.bodySmall?.copyWith(color: colors.outline),
           ),
           const SizedBox(height: 28),

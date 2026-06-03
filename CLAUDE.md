@@ -48,7 +48,7 @@ This is a Flutter + Android hybrid app. Flutter handles the UI and Firebase; nat
 
 ### Flutter → Android bridge
 
-`MainActivity.kt` exposes a `MethodChannel` on `com.example.notification_reader/service` with four methods:
+`MainActivity.kt` exposes a `MethodChannel` on `com.jugomo.notification_reader/service` with four methods:
 
 | Method | Action |
 |---|---|

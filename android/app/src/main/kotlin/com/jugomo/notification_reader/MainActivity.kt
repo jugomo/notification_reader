@@ -1,4 +1,4 @@
-package com.example.notification_reader
+package com.jugomo.notification_reader
 
 import android.content.ComponentName
 import android.content.Context
@@ -13,8 +13,8 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
 
-    private val methodChannelName = "com.example.notification_reader/service"
-    private val eventChannelName = "com.example.notification_reader/notifications"
+    private val methodChannelName = "com.jugomo.notification_reader/service"
+    private val eventChannelName = "com.jugomo.notification_reader/notifications"
 
     private val prefs by lazy { getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
 

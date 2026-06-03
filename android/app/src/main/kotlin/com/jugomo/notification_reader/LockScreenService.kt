@@ -1,4 +1,4 @@
-package com.example.notification_reader
+package com.jugomo.notification_reader
 
 import android.app.*
 import android.content.Intent
@@ -15,8 +15,8 @@ class LockScreenService : Service() {
     companion object {
         const val CHANNEL_ID = "notif_reader_channel"
         const val NOTIF_ID = 1
-        const val ACTION_UPDATE_BADGE = "com.example.notification_reader.UPDATE_BADGE"
-        const val ACTION_READ_NOTIFICATIONS = "com.example.notification_reader.DO_READ"
+        const val ACTION_UPDATE_BADGE = "com.jugomo.notification_reader.UPDATE_BADGE"
+        const val ACTION_READ_NOTIFICATIONS = "com.jugomo.notification_reader.DO_READ"
         const val EXTRA_BADGE_COUNT = "badge_count"
     }
 

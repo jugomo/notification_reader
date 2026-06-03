@@ -11,7 +11,7 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     let badgeChannel = FlutterMethodChannel(
-      name: "com.example.notification_reader/badge",
+      name: "com.jugomo.notification_reader/badge",
       binaryMessenger: flutterViewController.engine.binaryMessenger)
     badgeChannel.setMethodCallHandler { (call, result) in
       if call.method == "setBadge" {

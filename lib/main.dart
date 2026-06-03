@@ -119,9 +119,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  static const _serviceChannel = MethodChannel('com.example.notification_reader/service');
-  static const _notifChannel = EventChannel('com.example.notification_reader/notifications');
-  static const _badgeChannel = MethodChannel('com.example.notification_reader/badge');
+  static const _serviceChannel = MethodChannel('com.jugomo.notification_reader/service');
+  static const _notifChannel = EventChannel('com.jugomo.notification_reader/notifications');
+  static const _badgeChannel = MethodChannel('com.jugomo.notification_reader/badge');
 
   bool _hasPermission = false;
   bool _serviceRunning = false;
@@ -727,7 +727,7 @@ class _CreateNotificationCardState extends State<_CreateNotificationCard> {
       await _saveNotification({
         'source': 'manual',
         'appName': 'notification_reader',
-        'packageName': 'com.example.notification_reader',
+        'packageName': 'com.jugomo.notification_reader',
         'title': title,
         'body': body,
         'receivedAt': DateTime.now().toUtc().toIso8601String(),
