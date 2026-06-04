@@ -1,5 +1,7 @@
 # Notification Reader
 
+![Notification Reader](featured-graphic-1024x500.png)
+
 An Android app that captures system notifications and FCM push messages, stores them in Firebase Realtime Database, and lets trusted users monitor them in real time from their own device.
 
 ## What it does

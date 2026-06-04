@@ -47,6 +47,7 @@ void main() async {
     FirebaseDatabase.instance.setPersistenceEnabled(true);
   } catch (_) {}
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  FirebaseMessaging.instance.getToken().then((token) => debugPrint('FCM Token: $token'));
   await _localNotifications.initialize(
     const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
