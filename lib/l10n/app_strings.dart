@@ -146,6 +146,23 @@ class S {
   String get sectionPendingRequests => _en ? 'Pending requests' : 'Solicitudes pendientes';
   String get sectionRejected => _en ? 'Rejected' : 'Rechazadas';
 
+  // ── Account ───────────────────────────────────────────────────────────────
+  String get deleteAccount => _en ? 'Delete account' : 'Eliminar cuenta';
+  String get deleteAccountConfirmTitle =>
+      _en ? 'Delete account?' : '¿Eliminar cuenta?';
+  String get deleteAccountConfirmBody => _en
+      ? 'All your notifications, settings, and account data will be permanently deleted. This action cannot be undone.'
+      : 'Todas tus notificaciones, ajustes y datos de cuenta serán eliminados permanentemente. Esta acción no se puede deshacer.';
+  String get deleteAccountError => _en
+      ? 'Could not delete the account. Sign out and back in, then try again.'
+      : 'No se pudo eliminar la cuenta. Cierra sesión, vuelve a entrar e inténtalo de nuevo.';
+  String get reauthTitle =>
+      _en ? 'Confirm your password' : 'Confirma tu contraseña';
+  String get reauthBody => _en
+      ? 'Enter your password to confirm account deletion.'
+      : 'Ingresa tu contraseña para confirmar la eliminación de la cuenta.';
+  String get delete => _en ? 'Delete' : 'Eliminar';
+
   // ── Notifications ─────────────────────────────────────────────────────────
   String get notifications => _en ? 'Notifications' : 'Notificaciones';
   String get viewerSoundLabel => _en ? 'Sound on new notification' : 'Sonido al recibir notificación';

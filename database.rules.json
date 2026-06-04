@@ -2,6 +2,9 @@
   "rules": {
     "users": {
       "$uid": {
+        // Owner can delete their entire node (account deletion).
+        ".write": "auth != null && auth.uid == $uid",
+
         "profile": {
           // Only the owner can read or write their own profile.
           ".read": "auth != null && auth.uid == $uid",
