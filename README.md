@@ -4,6 +4,14 @@
 
 An Android app that captures system notifications and FCM push messages, stores them in Firebase Realtime Database, and lets trusted users monitor them in real time from their own device.
 
+<div align="center">
+  <a href="https://www.youtube.com/shorts/cFlfsc83GTk">
+    <img src="assets/promo-thumbnail.jpg" alt="Watch promo video" width="400" />
+  </a>
+  <br/>
+  <b>▶ Promo video</b>
+</div>
+
 ## What it does
 
 - **Captures notifications** from all apps on the device using Android's `NotificationListenerService`.
