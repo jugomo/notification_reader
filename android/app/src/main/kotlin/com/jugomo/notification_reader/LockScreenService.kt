@@ -135,19 +135,13 @@ class LockScreenService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val openAppIntent = packageManager.getLaunchIntentForPackage(packageName)
-        val pendingOpen = PendingIntent.getActivity(
-            this, 0, openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("Monitorizando notificaciones$countText")
-                .setContentText("La app captura tus notificaciones en segundo plano")
+                .setContentText("Toca para leer las notificaciones en voz alta")
                 .setNumber(badgeCount)
                 .setSmallIcon(Icon.createWithResource(this, android.R.drawable.ic_btn_speak_now))
-                .setContentIntent(pendingOpen)
+                .setContentIntent(pendingRead)
                 .addAction(
                     Notification.Action.Builder(
                         Icon.createWithResource(this, android.R.drawable.ic_btn_speak_now),
@@ -162,10 +156,10 @@ class LockScreenService : Service() {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
                 .setContentTitle("Monitorizando notificaciones$countText")
-                .setContentText("La app captura tus notificaciones en segundo plano")
+                .setContentText("Toca para leer las notificaciones en voz alta")
                 .setNumber(badgeCount)
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
-                .setContentIntent(pendingOpen)
+                .setContentIntent(pendingRead)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setOngoing(true)
                 .build()
