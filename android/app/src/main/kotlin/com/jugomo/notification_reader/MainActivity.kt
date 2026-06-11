@@ -72,6 +72,14 @@ class MainActivity : FlutterActivity() {
                         startService(intent)
                         result.success(null)
                     }
+                    "setEncryptionKey" -> {
+                        val key = call.arguments as? String
+                        if (key != null) {
+                            EncryptionUtil.setKey(key)
+                            prefs.edit().putString("enc_key", key).apply()
+                        }
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }

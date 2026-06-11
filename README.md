@@ -2,7 +2,7 @@
 
 ![Notification Reader](featured-graphic-1024x500.png)
 
-An Android app that captures system notifications and FCM push messages, stores them in Firebase Realtime Database, and lets trusted users monitor them in real time from their own device.
+An Android app that captures system notifications and FCM push messages, stores them encrypted in Firebase Realtime Database, and lets trusted users monitor them in real time from their own device.
 
 <div align="center">
   <a href="https://www.youtube.com/shorts/cFlfsc83GTk">
@@ -16,7 +16,8 @@ An Android app that captures system notifications and FCM push messages, stores 
 
 - **Captures notifications** from all apps on the device using Android's `NotificationListenerService`.
 - **Receives FCM push messages** in foreground, background, and terminated states.
-- **Stores everything** under `users/{uid}/notifications/` in Firebase Realtime Database.
+- **Stores everything encrypted** under `users/{uid}/notifications/` in Firebase Realtime Database using AES-256-GCM.
+- **End-to-end encryption**: notification content is encrypted on the device before it reaches Firebase. Authorised viewers decrypt it locally using a key shared via RSA-2048-OAEP wrapping — the server never sees plaintext.
 - **Shares access** with other users via a consent-based request flow — no access is granted without explicit approval.
 - **Lock-screen playback**: a persistent foreground notification lets you trigger text-to-speech readout of pending notifications directly from the lock screen.
 - **Sound alerts**: the Viewer tab plays a chime when new notifications arrive (configurable in Settings).
@@ -61,6 +62,24 @@ Accessible via the bell icon in the top-right corner of the Monitor tab. Here yo
 
 ---
 
+## End-to-end encryption
+
+All notification content (`appName`, `title`, `body`) is encrypted on the device before being written to Firebase, using AES-256-GCM with a per-device key. The encrypted format is `ENC:<iv_base64>:<ciphertext_base64>`. Plain values (no `ENC:` prefix) are treated as legacy/unencrypted and passed through unchanged.
+
+### Key sharing with viewers
+
+When an owner accepts a viewer request, they fetch the viewer's RSA-2048 public key from `users/{viewerUid}/profile/publicKey`, wrap their own AES key with it (OAEP padding), and store the result in `users/{ownerUid}/incoming_requests/{viewerUid}/wrappedKey`. The viewer downloads and unwraps the key locally using their RSA private key. Revoking access deletes `wrappedKey` from Firebase, and the viewer's locally cached copy is discarded.
+
+### Key storage
+
+| Where | What |
+|---|---|
+| `SharedPreferences` (Flutter) | AES-256 key, RSA-2048 key pair, remote AES keys indexed by owner uid |
+| `SharedPreferences` (Android) | AES-256 key (passed from Flutter via MethodChannel on startup) |
+| `users/{uid}/profile/publicKey` | RSA public key — readable by any authenticated user |
+
+---
+
 ## Database security rules
 
 Rules are defined in [`database.rules.json`](database.rules.json) and referenced in `firebase.json`. Deploy them with:
@@ -72,6 +91,7 @@ firebase deploy --only database
 | Path | Read | Write |
 |---|---|---|
 | `users/{uid}/profile` | owner only | owner only |
+| `users/{uid}/profile/publicKey` | any signed-in user | owner only (inherited) |
 | `users/{uid}/notifications` | owner or accepted viewer | owner or accepted viewer (delete) |
 | `users/{uid}/incoming_requests/{requesterUid}` | owner or requester | owner or requester |
 | `user_lookup/{emailKey}` | any signed-in user | any signed-in user (value must equal `auth.uid`) |
@@ -80,6 +100,7 @@ Key constraints enforced server-side:
 - A requester can only write `status: "pending"` or `status: "rejected"` on their own request — they cannot self-grant `"accepted"`.
 - `user_lookup` entries can only map an email key to the writer's own uid, preventing email hijacking.
 - Notification access for viewers is derived at read-time from the owner's `incoming_requests` node, so revoking access takes effect immediately without any client-side coordination.
+- `publicKey` is explicitly readable by any authenticated user so viewers can receive an encrypted AES key when a request is accepted.
 
 ---
 

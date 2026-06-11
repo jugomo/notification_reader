@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
+import 'encryption_util.dart';
+
 class NotifTile extends StatelessWidget {
   final Map<String, dynamic> data;
-  const NotifTile({super.key, required this.data});
+  final String ownerUid;
+  const NotifTile({super.key, required this.data, required this.ownerUid});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final isFcm = data['source'] == 'fcm';
-    final title = data['title'] as String? ?? '';
-    final body = data['body'] as String? ?? '';
-    final appName = data['appName'] as String? ?? (isFcm ? 'FCM' : '');
+    final title =
+        EncryptionUtil.decryptForUid(data['title'] as String? ?? '', ownerUid);
+    final body =
+        EncryptionUtil.decryptForUid(data['body'] as String? ?? '', ownerUid);
+    final appName = EncryptionUtil.decryptForUid(
+        data['appName'] as String? ?? (isFcm ? 'FCM' : ''), ownerUid);
     final receivedAt = data['receivedAt'] as String? ?? '';
 
     String timeLabel = '';

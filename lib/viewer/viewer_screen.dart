@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_strings.dart';
 import '../l10n/locale_provider.dart';
+import '../shared/encryption_util.dart';
 import '../shared/notif_tile.dart';
 
 enum _DeviceState { awaitingConsent, accepted, rejected }
@@ -213,6 +215,7 @@ class _ViewerScreenState extends State<ViewerScreen>
         _listenRequestStatus(device);
         if (device.state == _DeviceState.accepted) {
           _startDeviceCountListening(device);
+          _loadRemoteKeyForDevice(device);
         }
       }
     }
@@ -312,6 +315,22 @@ class _ViewerScreenState extends State<ViewerScreen>
     });
     _reportCount();
     _saveDevicesToPrefs();
+    EncryptionUtil.removeRemoteKey(device.uid);
+  }
+
+  /// Downloads and unwraps the AES key that [device]'s owner placed for us
+  /// when they accepted our monitoring request.
+  Future<void> _loadRemoteKeyForDevice(_MonitoredDevice device) async {
+    if (EncryptionUtil.hasRemoteKey(device.uid)) return;
+    try {
+      final snap = await FirebaseDatabase.instance
+          .ref('users/${device.uid}/incoming_requests/$_myUid/wrappedKey')
+          .get();
+      final wrappedKey = snap.value as String?;
+      if (wrappedKey != null) {
+        await EncryptionUtil.unwrapAndStoreRemoteKey(device.uid, wrappedKey);
+      }
+    } catch (_) {}
   }
 
   void _listenRequestStatus(_MonitoredDevice device) {
@@ -337,6 +356,7 @@ class _ViewerScreenState extends State<ViewerScreen>
       });
       if (status == 'accepted' && !wasAccepted) {
         _startDeviceCountListening(device);
+        _loadRemoteKeyForDevice(device);
       } else if (status != 'accepted' && wasAccepted) {
         device.countSub?.cancel();
         device.newCount = 0;
@@ -719,7 +739,7 @@ class _DeviceNotificationsViewState extends State<_DeviceNotificationsView> {
                       child: Icon(Icons.delete, color: colors.error),
                     ),
                     onDismissed: (_) => _deleteOne(context, key),
-                    child: NotifTile(data: entry),
+                    child: NotifTile(data: entry, ownerUid: widget.uid),
                   );
                 },
               ),
@@ -795,8 +815,11 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
       }
 
       final targetUid = snapshot.value as String;
+      final myEmail = FirebaseAuth.instance.currentUser!.email ?? '';
 
-      // Own device: add back without a request flow
+      // Own device: add self tab. On web, also create a self-request so the
+      // Android app can wrap its AES key for this browser's RSA key, enabling
+      // decryption of Android-captured notifications on web.
       if (targetUid == widget.myUid) {
         if (widget.selfAlreadyMonitored) {
           setState(() {
@@ -804,6 +827,15 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
             _errorText = s.alreadyMonitoring;
           });
         } else {
+          if (kIsWeb && EncryptionUtil.rsaPublicKeyBase64 != null) {
+            await FirebaseDatabase.instance
+                .ref('users/$targetUid/incoming_requests/$targetUid')
+                .set({
+                  'email': myEmail,
+                  'status': 'pending',
+                  'requestPublicKey': EncryptionUtil.rsaPublicKeyBase64,
+                });
+          }
           widget.onSelfAdded();
         }
         return;
@@ -817,13 +849,18 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
         return;
       }
 
-      final myEmail = FirebaseAuth.instance.currentUser!.email ?? '';
-
       final existing = await FirebaseDatabase.instance
           .ref('users/$targetUid/incoming_requests/${widget.myUid}')
           .get();
 
       if (!mounted) return;
+
+      final requestData = <String, dynamic>{
+        'email': myEmail,
+        'status': 'pending',
+        if (EncryptionUtil.rsaPublicKeyBase64 != null)
+          'requestPublicKey': EncryptionUtil.rsaPublicKeyBase64,
+      };
 
       _DeviceState deviceState;
       if (existing.exists) {
@@ -833,13 +870,13 @@ class _AddDeviceSheetState extends State<_AddDeviceSheet> {
         } else {
           await FirebaseDatabase.instance
               .ref('users/$targetUid/incoming_requests/${widget.myUid}')
-              .set({'email': myEmail, 'status': 'pending'});
+              .set(requestData);
           deviceState = _DeviceState.awaitingConsent;
         }
       } else {
         await FirebaseDatabase.instance
             .ref('users/$targetUid/incoming_requests/${widget.myUid}')
-            .set({'email': myEmail, 'status': 'pending'});
+            .set(requestData);
         deviceState = _DeviceState.awaitingConsent;
       }
 

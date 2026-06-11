@@ -8,7 +8,12 @@
         "profile": {
           // Only the owner can read or write their own profile.
           ".read": "auth != null && auth.uid == $uid",
-          ".write": "auth != null && auth.uid == $uid"
+          ".write": "auth != null && auth.uid == $uid",
+
+          "publicKey": {
+            // RSA public keys are meant to be shared so other users can wrap AES keys for us.
+            ".read": "auth != null"
+          }
         },
 
         "notifications": {

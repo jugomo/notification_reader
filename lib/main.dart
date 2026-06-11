@@ -16,20 +16,30 @@ import 'l10n/app_strings.dart';
 import 'l10n/locale_provider.dart';
 import 'requests/requests_screen.dart';
 import 'settings/settings_screen.dart';
+import 'shared/encryption_util.dart';
 import 'viewer/viewer_screen.dart';
 
 final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
-// Guarda una notificación bajo users/{uid}/notifications/
+// Guarda una notificación bajo users/{uid}/notifications/ con los campos
+// appName, title y body encriptados con AES-256-GCM.
 Future<void> _saveNotification(Map<String, dynamic> data) async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid == null) return;
-  await FirebaseDatabase.instance.ref('users/$uid/notifications').push().set(data);
+  final encData = Map<String, dynamic>.from(data);
+  for (final field in ['appName', 'title', 'body']) {
+    final value = encData[field];
+    if (value is String && value.isNotEmpty) {
+      encData[field] = EncryptionUtil.encrypt(value);
+    }
+  }
+  await FirebaseDatabase.instance.ref('users/$uid/notifications').push().set(encData);
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await EncryptionUtil.init();
   await _saveNotification({
     'source': 'fcm',
     'title': message.notification?.title ?? '',
@@ -43,11 +53,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await EncryptionUtil.init();
   try {
     FirebaseDatabase.instance.setPersistenceEnabled(true);
   } catch (_) {}
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  FirebaseMessaging.instance.getToken().then((token) => debugPrint('FCM Token: $token'));
+  FirebaseMessaging.instance.getToken().then((token) => debugPrint('FCM Token: $token')).catchError((_) {});
   await _localNotifications.initialize(
     const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -136,9 +147,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _saveUserProfile();
+    _sendEncryptionKey();
     _checkPermission();
     _initFcm();
     _initSystemNotificationListener();
+    if (kIsWeb) _loadSelfDecryptionKey();
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user == null && _serviceRunning) _stopService();
     });
@@ -161,11 +174,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> _saveUserProfile() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) return;
+
+    // Make EncryptionUtil aware of this uid so decryptForUid works correctly.
+    EncryptionUtil.setOwnUid(user.uid);
+
     final sanitizedEmail = user.email!.toLowerCase().replaceAll('.', ',');
     final db = FirebaseDatabase.instance;
     final profileRef = db.ref('users/${user.uid}/profile');
 
-    final updates = <String, dynamic>{'email': user.email, 'uid': user.uid};
+    final updates = <String, dynamic>{
+      'email': user.email,
+      'uid': user.uid,
+      // Publish RSA public key so authorised viewers can receive our AES key.
+      if (EncryptionUtil.rsaPublicKeyBase64 != null)
+        'publicKey': EncryptionUtil.rsaPublicKeyBase64!,
+    };
 
     // Si el campo no existe es un usuario anterior a esta funcionalidad → aprobado por defecto
     final approvedSnap = await profileRef.child('admin_approved').get();
@@ -228,6 +251,30 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool get _isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   bool get _isMacOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
   bool get _isMonitoringSupported => _isAndroid || _isMacOS;
+
+  Future<void> _sendEncryptionKey() async {
+    if (!_isAndroid) return;
+    final key = EncryptionUtil.aesKeyBase64;
+    if (key != null) {
+      await _serviceChannel.invokeMethod('setEncryptionKey', key);
+    }
+  }
+
+  // On web, load the AES key that Android wrapped for this browser session
+  // (stored at incoming_requests/{uid}/wrappedKey after Android accepts the
+  // self-viewer request created when the user adds their own account on web).
+  Future<void> _loadSelfDecryptionKey() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final snap = await FirebaseDatabase.instance
+        .ref('users/$uid/incoming_requests/$uid/wrappedKey')
+        .get();
+    final wrappedKey = snap.value as String?;
+    if (wrappedKey == null) return;
+    try {
+      await EncryptionUtil.unwrapAndStoreRemoteKey(uid, wrappedKey);
+    } catch (_) {}
+  }
 
   Future<void> _checkPermission() async {
     if (!_isAndroid) return;

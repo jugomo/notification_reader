@@ -79,6 +79,11 @@ class NotificationReaderService : NotificationListenerService() {
 
         val receivedAt = isoFormat.format(Date())
 
+        // Load the encryption key (set by Flutter on launch; persisted so it's
+        // available here even when the Flutter engine is not running).
+        val encKey = prefs.getString("enc_key", null)
+        if (encKey != null) EncryptionUtil.setKey(encKey)
+
         // Write directly to Firebase — works even when the Flutter engine is not running
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid != null) {
@@ -89,9 +94,9 @@ class NotificationReaderService : NotificationListenerService() {
                     mapOf(
                         "source" to "system",
                         "packageName" to sbn.packageName,
-                        "appName" to appName,
-                        "title" to title,
-                        "body" to body,
+                        "appName" to EncryptionUtil.encrypt(appName),
+                        "title" to EncryptionUtil.encrypt(title),
+                        "body" to EncryptionUtil.encrypt(body),
                         "receivedAt" to receivedAt,
                     )
                 )

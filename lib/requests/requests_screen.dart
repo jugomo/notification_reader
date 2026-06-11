@@ -3,21 +3,87 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
+import '../shared/encryption_util.dart';
 
-class RequestsScreen extends StatelessWidget {
+class RequestsScreen extends StatefulWidget {
   const RequestsScreen({super.key});
 
+  @override
+  State<RequestsScreen> createState() => _RequestsScreenState();
+}
+
+class _RequestsScreenState extends State<RequestsScreen> {
   String get _myUid => FirebaseAuth.instance.currentUser!.uid;
+
+  // Accepts a pending request: fetches requester's RSA public key, wraps own
+  // AES key with it, and writes both the wrapped key and the new status
+  // atomically. If the requester hasn't uploaded a public key yet (old client),
+  // falls back to accepting without a wrapped key.
+  Future<void> _accept(String requesterUid) async {
+    // Prefer the key embedded in the request — profile/publicKey may have been
+    // overwritten by a different device (e.g. Android key replaced by web key).
+    final reqKeySnap = await FirebaseDatabase.instance
+        .ref('users/$_myUid/incoming_requests/$requesterUid/requestPublicKey')
+        .get();
+    String? publicKey = reqKeySnap.value as String?;
+    if (publicKey == null) {
+      final snap = await FirebaseDatabase.instance
+          .ref('users/$requesterUid/profile/publicKey')
+          .get();
+      publicKey = snap.value as String?;
+    }
+
+    final updates = <String, dynamic>{
+      'users/$_myUid/incoming_requests/$requesterUid/status': 'accepted',
+    };
+    if (publicKey != null && EncryptionUtil.aesKeyBase64 != null) {
+      try {
+        updates['users/$_myUid/incoming_requests/$requesterUid/wrappedKey'] =
+            EncryptionUtil.wrapAesKeyFor(publicKey);
+      } catch (_) {
+        // Wrapping failure is non-fatal — access is still granted.
+      }
+    }
+    await FirebaseDatabase.instance.ref().update(updates);
+  }
 
   Future<void> _setStatus(String requesterUid, String status) =>
       FirebaseDatabase.instance
           .ref('users/$_myUid/incoming_requests/$requesterUid/status')
           .set(status);
 
+  // Revoke: clear status to rejected AND delete the wrapped key so the
+  // revoked viewer can no longer decrypt future notifications.
+  Future<void> _revoke(String requesterUid) =>
+      FirebaseDatabase.instance
+          .ref('users/$_myUid/incoming_requests/$requesterUid')
+          .update({'status': 'rejected', 'wrappedKey': null});
+
   Future<void> _delete(String requesterUid) =>
       FirebaseDatabase.instance
           .ref('users/$_myUid/incoming_requests/$requesterUid')
           .remove();
+
+  // When the screen loads, auto-provision wrapped keys for requests that were
+  // accepted before the E2E update (they have no wrappedKey yet).
+  Future<void> _provisionMissingWrappedKey(String requesterUid) async {
+    final reqKeySnap = await FirebaseDatabase.instance
+        .ref('users/$_myUid/incoming_requests/$requesterUid/requestPublicKey')
+        .get();
+    String? publicKey = reqKeySnap.value as String?;
+    if (publicKey == null) {
+      final snap = await FirebaseDatabase.instance
+          .ref('users/$requesterUid/profile/publicKey')
+          .get();
+      publicKey = snap.value as String?;
+    }
+    if (publicKey == null || EncryptionUtil.aesKeyBase64 == null) return;
+    try {
+      await FirebaseDatabase.instance
+          .ref('users/$_myUid/incoming_requests/$requesterUid/wrappedKey')
+          .set(EncryptionUtil.wrapAesKeyFor(publicKey));
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +145,14 @@ class RequestsScreen extends StatelessWidget {
             );
           }
 
+          // Auto-provision wrapped keys for already-accepted requests that
+          // predate the E2E update (they have no wrappedKey field).
+          for (final e in accepted) {
+            if (e.info['wrappedKey'] == null) {
+              _provisionMissingWrappedKey(e.uid);
+            }
+          }
+
           return ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
@@ -89,7 +163,7 @@ class RequestsScreen extends StatelessWidget {
                       status: 'accepted',
                       onAccept: () {},
                       onReject: () {},
-                      onRevoke: () => _setStatus(e.uid, 'rejected'),
+                      onRevoke: () => _revoke(e.uid),
                       onDelete: () {},
                     )),
               ],
@@ -98,7 +172,7 @@ class RequestsScreen extends StatelessWidget {
                 ...pending.map((e) => _RequestTile(
                       email: e.info['email'] as String? ?? e.uid,
                       status: 'pending',
-                      onAccept: () => _setStatus(e.uid, 'accepted'),
+                      onAccept: () => _accept(e.uid),
                       onReject: () => _setStatus(e.uid, 'rejected'),
                       onRevoke: () {},
                       onDelete: () {},
