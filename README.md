@@ -12,6 +12,10 @@ An Android app that captures system notifications and FCM push messages, stores 
   <b>▶ Promo video</b>
 </div>
 
+## Why you need it? - Never miss a thing
+
+Left your phone at home? No problem. Notification Reader syncs your notifications to Firebase in real time, so you can access them from any authorised device or from the web app, without missing anything important while you're away.
+
 ## What it does
 
 - **Captures notifications** from all apps on the device using Android's `NotificationListenerService`.
