@@ -30,8 +30,7 @@ Left your phone at home? No problem. Notification Reader syncs your notification
 ### How it compares to other options
 
 Several apps offer partial overlap, but no single app combines all three of Notification Reader's pillars: 
-
-— universal capture and forwarding to *any* device on your own account (not just a PC)
+- universal capture and forwarding to *any* device on your own account (not just a PC)
 - end-to-end encrypted storage (most competitors keep content in plaintext on their own backend)
 - lock-screen voice readout as an explicit, no-unlock-required action. 
 
