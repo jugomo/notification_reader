@@ -190,10 +190,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         'publicKey': EncryptionUtil.rsaPublicKeyBase64!,
     };
 
-    // Si el campo no existe es un usuario anterior a esta funcionalidad → aprobado por defecto
-    final approvedSnap = await profileRef.child('admin_approved').get();
-    if (!approvedSnap.exists) updates['admin_approved'] = true;
-
     await Future.wait([
       profileRef.update(updates),
       db.ref('user_lookup/$sanitizedEmail').set(user.uid),

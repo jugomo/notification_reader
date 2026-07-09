@@ -10,6 +10,12 @@
           ".read": "auth != null && auth.uid == $uid",
           ".write": "auth != null && auth.uid == $uid",
 
+          "admin_approved": {
+            // Owner can only create this as false, and never change it afterwards —
+            // only an admin editing the console (or a trusted backend) can approve.
+            ".write": "auth != null && auth.uid == $uid && ((!data.exists() && newData.val() == false) || (data.exists() && data.val() == newData.val()))"
+          },
+
           "publicKey": {
             // RSA public keys are meant to be shared so other users can wrap AES keys for us.
             ".read": "auth != null"
