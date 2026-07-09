@@ -27,6 +27,28 @@ Left your phone at home? No problem. Notification Reader syncs your notification
 - **Sound alerts**: the Viewer tab plays a chime when new notifications arrive (configurable in Settings).
 - **Persistent viewer state**: the last monitored user is remembered across app restarts — no need to re-enter the email after closing the app.
 
+### How it compares to other options
+
+Several apps offer partial overlap, but no single app combines all three of Notification Reader's pillars: 
+
+— universal capture and forwarding to *any* device on your own account (not just a PC)
+- end-to-end encrypted storage (most competitors keep content in plaintext on their own backend)
+- lock-screen voice readout as an explicit, no-unlock-required action. 
+
+The closest matches in raw function are KDE Connect/GSConnect (if the other device is a PC) and Pushbullet/Join/AirDroid (cross-platform, but third-party and without E2E encryption as a core design goal).
+
+| App | What it does | Key difference from Notification Reader |
+|---|---|---|
+| **KDE Connect / GSConnect** | Mirrors notifications plus clipboard/files, Android→PC (mainly Linux), free and open source | Android→**PC** only, not Android→Android; no cloud history, no E2E encryption, no lock-screen TTS |
+| **Pushbullet** | Mirrors notifications and "pushes" between Android and PC/another Android | Third-party backend (they can see your content), limited free tier, no E2E encryption, no TTS |
+| **Join (joaoapps)** | Same idea, one-time payment, deep Tasker integration | Built for automation, not for voice accessibility |
+| **AirDroid** | Full remote-control suite (screen, files, SMS) in addition to notification mirroring | Much heavier/more invasive, subscription-based, no focus on E2E privacy or voice |
+| **Microsoft Phone Link** | Mirrors Android notifications to Windows | Windows-only, not Android↔Android, no persistent history of its own, no TTS |
+| **ntfy** | Self-hosted pub-sub service for *sending* your own notifications | Doesn't capture existing system notifications — different use case entirely |
+| Voice-readout apps (Speaki, By Voice, etc.) | Local text-to-speech of notifications | Local to the same device only — nothing is synced to another device |
+| Notification-history apps | Local log of received notifications with filters/backup | Local history only, no remote sync |
+| Android 15 notification dismissal sync | Syncs the read/dismissed state between linked Android devices | Only syncs status of notifications Android already delivers natively — no arbitrary content capture, no history, no TTS |
+
 ---
 
 ## Modes
