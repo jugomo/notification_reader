@@ -12,7 +12,7 @@ import '../shared/app_version.dart';
 // Notifies the app owner by email when a new user signs up and needs
 // admin_approved activation. Public by design: the Lambda itself verifies
 // the caller by re-reading the profile from Firebase with the same idToken,
-// so the URL being public carries no risk.
+// so the URL being public carries no risk to data.
 const _newUserNotifyUrl =
     'https://allivjggtxxjhmu6xqiyrrsxoi0zhdgh.lambda-url.eu-west-1.on.aws/';
 
@@ -128,15 +128,18 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.notifications_active, size: 64, color: colors.primary),
+                Icon(
+                  Icons.notifications_active,
+                  size: 64,
+                  color: colors.primary,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   s.appTitle,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -160,7 +163,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           border: const OutlineInputBorder(),
                         ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return s.enterEmail;
+                          if (v == null || v.trim().isEmpty)
+                            return s.enterEmail;
                           if (!v.contains('@')) return s.invalidEmail;
                           return null;
                         },
@@ -177,9 +181,13 @@ class _AuthScreenState extends State<AuthScreen> {
                           border: const OutlineInputBorder(),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                         validator: (v) {
@@ -207,7 +215,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : Text(_isLogin ? s.login : s.register),
                       ),
@@ -216,9 +227,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         onPressed: _loading
                             ? null
                             : () => setState(() {
-                                  _isLogin = !_isLogin;
-                                  _errorMessage = null;
-                                }),
+                                _isLogin = !_isLogin;
+                                _errorMessage = null;
+                              }),
                         child: Text(_isLogin ? s.noAccount : s.hasAccount),
                       ),
                     ],
