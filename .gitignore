@@ -25,6 +25,10 @@ android/key.properties
 .env.*
 *.env
 
+# AWS Lambda — artefactos generados por deploy.sh, no versionar
+aws-lambda/*/node_modules/
+aws-lambda/*/function.zip
+
 # Claude Code — configuración local del entorno de desarrollo
 .claude/
 

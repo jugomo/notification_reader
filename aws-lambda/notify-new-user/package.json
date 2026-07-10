@@ -1,0 +1,10 @@
+{
+  "name": "notify-new-user",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "nodemailer": "^6.9.14"
+  }
+}

@@ -1,9 +1,20 @@
+import 'dart:convert';
+import 'dart:developer' as developer;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../l10n/app_strings.dart';
 import '../shared/app_version.dart';
+
+// Notifies the app owner by email when a new user signs up and needs
+// admin_approved activation. Public by design: the Lambda itself verifies
+// the caller by re-reading the profile from Firebase with the same idToken,
+// so the URL being public carries no risk.
+const _newUserNotifyUrl =
+    'https://allivjggtxxjhmu6xqiyrrsxoi0zhdgh.lambda-url.eu-west-1.on.aws/';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -64,12 +75,33 @@ class _AuthScreenState extends State<AuthScreen> {
           'uid': user.uid,
           'admin_approved': false,
         });
+        _notifyNewUserPending(user);
       }
     } on FirebaseAuthException catch (e) {
       setState(() => _errorMessage = s.authError(e.code));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  // Fire-and-forget: tells the notify-new-user Lambda that a new account
+  // needs admin_approved activation. Never surfaced to the user — a failure
+  // here must not affect the signup flow.
+  void _notifyNewUserPending(User user) {
+    () async {
+      try {
+        final idToken = await user.getIdToken();
+        await http
+            .post(
+              Uri.parse(_newUserNotifyUrl),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'uid': user.uid, 'idToken': idToken}),
+            )
+            .timeout(const Duration(seconds: 10));
+      } catch (e) {
+        developer.log('Failed to notify new user pending approval', error: e);
+      }
+    }();
   }
 
   @override

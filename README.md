@@ -129,6 +129,24 @@ Key constraints enforced server-side:
 
 ---
 
+## New user approval
+
+New accounts start with `admin_approved: false` and are gated behind a pending-approval screen (`_PendingApprovalScreen` in `lib/main.dart`) until an admin flips that flag to `true` from the Firebase console — the database rules only allow the owner to create it as `false`, never to change it themselves (see [`database.rules.json`](database.rules.json)).
+
+To get notified by email whenever someone signs up, this project includes an optional AWS Lambda in [`aws-lambda/notify-new-user/`](aws-lambda/notify-new-user/) (not required for the app itself to work). Right after signup, the app fire-and-forgets a POST with `{ uid, idToken }` to the Lambda's Function URL. The Lambda re-reads `users/{uid}/profile` from the Realtime Database using that same ID token — so it only succeeds if the token really belongs to that uid, no Firebase service account needed — and emails the configured recipient via Gmail SMTP if `admin_approved === false`.
+
+To deploy your own instance:
+
+```bash
+cd aws-lambda/notify-new-user
+cp .env.local.demo .env.local   # fill in SMTP_USER, SMTP_APP_PASSWORD, NOTIFY_TO_EMAIL
+DATABASE_URL="https://<your-project>-default-rtdb.<region>.firebasedatabase.app" ./deploy.sh
+```
+
+Then update the `_newUserNotifyUrl` constant in [`lib/auth/auth_screen.dart`](lib/auth/auth_screen.dart) with the Function URL printed by the script.
+
+---
+
 ## Firebase setup
 
 Required before first run:
