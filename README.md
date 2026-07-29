@@ -12,6 +12,15 @@ An Android app that captures system notifications and FCM push messages, stores 
   <b>▶ Promo video</b>
 </div>
 
+## Ownership & contributing
+
+This project was created by [@jugomo](https://github.com/jugomo) and is
+licensed under the [MIT License](LICENSE). Anyone is welcome to use this
+software at their own risk, copy or fork it as long as the original
+author is credited, and contribute back, whether that's opening a pull
+request or simply suggesting improvements via an issue. No warranty is
+provided.
+
 ## Why you need it? - Never miss a thing
 
 Left your phone at home? No problem. Notification Reader syncs your notifications to Firebase in real time, so you can access them from any authorised device or from the web app, without missing anything important while you're away.
